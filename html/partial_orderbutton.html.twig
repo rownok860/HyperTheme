@@ -1,0 +1,144 @@
+{% if request.product %}
+    {% set product = guest.product_get({"id": request.product}) %}
+{% endif %}
+
+<div class="row justify-content-center">
+    <div class="col-md-12">
+        <div class="card border-0 shadow-none" id="orderbutton" style="margin-bottom: 0; background: transparent;">
+            <div class="card-body p-0">
+                <!-- Stepper -->
+                <div class="stepper px-4 pt-4">
+                    <div class="step-item {% if not product %}active{% elseif product %}completed{% endif %}">
+                        <div class="step-circle">1</div>
+                        <div class="step-label">{{ 'Select'|trans }}</div>
+                    </div>
+                    <div class="step-item {% if product and not request.checkout %}active{% elseif request.checkout %}completed{% endif %}">
+                        <div class="step-circle">2</div>
+                        <div class="step-label">{{ 'Configure'|trans }}</div>
+                    </div>
+                    
+                    {% if not client %}
+                        <div class="step-item {% if request.checkout and not client %}active{% elseif client and request.checkout %}completed{% endif %}">
+                            <div class="step-circle">3</div>
+                            <div class="step-label">{{ 'Login'|trans }}</div>
+                        </div>
+                        <div class="step-item {% if client and request.checkout %}active{% endif %}">
+                            <div class="step-circle">4</div>
+                            <div class="step-label">{{ 'Checkout'|trans }}</div>
+                        </div>
+                    {% else %}
+                        <div class="step-item {% if request.checkout %}active{% endif %}">
+                            <div class="step-circle">3</div>
+                            <div class="step-label">{{ 'Checkout'|trans }}</div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div id="orderManager" class="d-flex flex-column gap-4">
+
+                    {% if not product %}
+                        {{ include('mod_orderbutton_choose_product.html.twig') }}
+                    {% endif %}
+
+                    {% if product and not request.checkout %}
+                        {{ include('mod_orderbutton_product_configuration.html.twig') }}
+                    {% endif %}
+
+                    {% if request.checkout and not client %}
+                        {{ include('mod_orderbutton_client.html.twig') }}
+                    {% endif %}
+
+                    {% if request.checkout and client %}
+                        {{ include('mod_orderbutton_checkout.html.twig') }}
+                    {% endif %}
+
+                    <div class="collapse" id="payment-html">
+                        <div class="card">
+                            <div class="card-body" id="payment-html-inner"></div>
+                        </div>
+                    </div>
+
+                </div>
+                {% if guest.extension_is_on({"mod":'branding'}) %}
+                    <div class="d-flex justify-content-center small text-muted pt-4 pb-2">
+                        <span>{{ 'Powered by'|trans }}</span>&nbsp;<a href="https://fossbilling.org"
+                                                                      title="Billing Software" target="_blank" class="text-decoration-none">FOSSBilling
+                            Community</a>
+                    </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+</div>
+<div class="loading"
+     style="display: none; background: rgba(255,255,255,0.8) no-repeat; width:100%; height:100%; position:fixed; top:0; left:0; z-index:999;">
+    <div class="d-flex justify-content-center align-items-center h-100">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#show-promo-field').on('click', function (event) {
+            $('#apply-promo').show();
+            $(this).hide();
+            $('#promocode').focus();
+        });
+
+        $('.register-login a').on('click', function (e) {
+            e.preventDefault();
+            $(this).tab('show');
+        });
+
+    });
+
+    function onOrderCheckout(result){
+        if (result.invoice_hash) {
+            bb.post('guest/invoice/payment', {
+            hash: result.invoice_hash,
+            gateway_id: result.gateway_id,
+            auto_redirect: true
+            }, function (r) {
+                let checkoutEl = document.getElementById('checkout-step');
+                let paymentHtmlEl = document.getElementById('payment-html');
+                if (r.iframe) {
+                    $('#payment-html-inner').html(r.result);
+                    if(checkoutEl) checkoutEl.style.display = 'none';
+                    new bootstrap.Collapse(paymentHtmlEl).show();
+                } else {
+                    var link = '{{ "invoice/banklink"|link }}' + '/' + result.invoice_hash + '/' + result.gateway_id;
+                    $('#payment-html-inner').html('<a href="' + link + '" target="_parent" id="redirect-to-gateway">Redirect to payment gateway</a>');
+                    if(checkoutEl) checkoutEl.style.display = 'none';
+                    new bootstrap.Collapse(paymentHtmlEl).show();
+                    $('#redirect-to-gateway')[0].click();
+                }
+            });
+        } else {
+            window.top.location.href = ('{{ "order/service/manage"|link }}' + '/' + result.order_id);
+        }
+    }
+
+    function onLogin(result){
+        FOSSBilling.message("{{ 'You logged in successfully'|trans }}");
+        location.reload();
+    }
+
+    function onAccountCreate(result){
+        //login after registration
+        var login_details = {
+            email: $('#reg-email').val(),
+            password: $('#reg-password').val()
+        };
+        bb.post(
+            'guest/client/login',
+            login_details,
+            function (result) {
+                FOSSBilling.message("{{ 'You logged in successfully'|trans }}");
+                location.reload();
+            }
+        );
+    }
+</script>

@@ -18,7 +18,6 @@
 <div class="row row-deck row-cards mb-3">
    <div class="col-md-12">
       <div class="card card-sm">
-         <div class="card-status-top bg-yellow"></div>
          <div class="card-body">
             <p>{{ settings.showcase_text |markdown }}</p>
             {% if (settings.showcase_button_url) and (settings.showcase_button_title) %}
@@ -30,6 +29,7 @@
 </div>
 {% endif %}
 {% if client %}
+{% set profile = client.profile_get %}
 {% set tickets = client.support_ticket_get_list({ "status": 'on_hold' }) %}
 {% if tickets.total > 0 %}
 <div class="row">
@@ -73,9 +73,8 @@
 </div>
 {% endif %}
 <div class="row row-deck row-cards">
-   <div class="col-sm-6 col-lg-4">
+   <div class="col-sm-6 col-lg-3">
       <div class="card card-sm">
-         <div class="card-status-top bg-green"></div>
          <div class="card-body">
             <div class="row align-items-center">
                <div class="col-auto">
@@ -104,9 +103,8 @@
          </div>
       </div>
    </div>
-   <div class="col-sm-6 col-lg-4">
+   <div class="col-sm-6 col-lg-3">
       <div class="card card-sm">
-         <div class="card-status-top bg-danger"></div>
          <div class="card-body">
             <div class="row align-items-center">
                <div class="col-auto">
@@ -133,9 +131,8 @@
          </div>
       </div>
    </div>
-   <div class="col-sm-6 col-lg-4">
+   <div class="col-sm-6 col-lg-3">
       <div class="card card-sm">
-         <div class="card-status-top bg-warning"></div>
          <div class="card-body">
             <div class="row align-items-center">
                <div class="col-auto">
@@ -163,12 +160,44 @@
          </div>
       </div>
    </div>
+   <div class="col-sm-6 col-lg-3">
+      <div class="card card-sm">
+         <div class="card-body">
+            <div class="row align-items-center">
+               <div class="col-auto">
+                  <span class="bg-primary text-white avatar">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-wallet" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M17 8v-3a1 1 0 0 0 -1 -1h-10a2 2 0 0 0 0 4h12a1 1 0 0 1 1 1v3m0 4v3a1 1 0 0 1 -1 1h-12a2 2 0 0 1 -2 -2v-12"></path>
+                        <path d="M20 12v4h-4a2 2 0 0 1 0 -4h4"></path>
+                     </svg>
+                  </span>
+               </div>
+               <div class="col">
+                  <div class="font-weight-medium">
+                     {{ profile.balance | money(profile.currency) }}
+                  </div>
+                  <div class="text-muted">
+                     {{ 'Wallet Balance'|trans }}
+                  </div>
+                  <div class="text-muted">
+                     <a href="{{ 'client/balance'|link }}">{{ 'Add Funds'|trans }}</a>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+   </div>
 </div>
 <div class="row row-deck row-cards mt-1">
    <div class="col-md-6">
       <div class="card">
          <div class="card-header">
             <h3 class="card-title">{{ 'Recent orders'|trans }}</h3>
+            <div class="card-actions">
+               <a href="{{ '/order'|link }}" class="btn btn-outline-primary btn-sm me-1">{{ 'New order'|trans }}</a>
+               <a href="{{ '/order/service'|link }}" class="btn btn-ghost-secondary btn-sm">{{ 'View all'|trans }}</a>
+            </div>
          </div>
          <div class="table-responsive">
             <table class="table card-table table-vcenter text-nowrap table-hover table-striped">
@@ -195,19 +224,26 @@
    <div class="col-md-6">
       <div class="card">
          <div class="card-header">
-            <h3 class="card-title">{{ 'Recent emails'|trans }}</h3>
+            <h3 class="card-title">{{ 'Recent invoices'|trans }}</h3>
+            <div class="card-actions">
+               <a href="{{ '/invoice'|link }}" class="btn btn-ghost-secondary btn-sm">{{ 'View all'|trans }}</a>
+            </div>
          </div>
          <div class="table-responsive">
             <table class="table card-table table-vcenter text-nowrap table-hover table-striped">
                <tbody>
-                  {% for i, email in client.email_get_list({ "per_page": 5 }).list %}
+                  {% for i, invoice in client.invoice_get_list({ "per_page": 5 }).list %}
                   <tr class="{{ cycle(['odd', 'even'], i) }}">
-                     <td><a href="{{ 'email'|link }}/{{ email.id }}">{{ email.subject|truncate(30) }}</a></td>
-                     <td title="{{ email.created_at|format_datetime }}">{{ email.created_at|timeago }} {{ 'ago'|trans }}</td>
+                      {% set nr = invoice.serie ~ "%05s"|format(invoice.nr) %}
+                      <td><a href="{{ 'invoice'|link }}/{{ invoice.hash }}">{{ 'invoice'|trans }} #{{ nr }}</a></td>
+                     <td>{{ invoice.total | money(invoice.currency) }}</td>
+                     <td>
+                        <span class="badge bg-{% if invoice.status == 'paid' %}green{% elseif invoice.status == 'unpaid' %}red{% endif %}">{{ mf.status_name(invoice.status) }}</span>
+                     </td>
                   </tr>
                   {% else %}
                   <tr>
-                     <td colspan="2">{{ 'The list is empty'|trans }}</td>
+                     <td colspan="3">{{ 'The list is empty'|trans }}</td>
                   </tr>
                   {% endfor %}
                </tbody>

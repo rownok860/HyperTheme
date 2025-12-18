@@ -1,0 +1,271 @@
+{% set company = guest.system_company %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>{{ 'Invoice'|trans }} {{ invoice.series }}{{ "%05s"|format(invoice.nr) }}</title>
+    <style>
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            color: #333;
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 100%;
+            margin: 0 auto;
+        }
+        .header-table {
+            width: 100%;
+            margin-bottom: 40px;
+            border-collapse: collapse;
+        }
+        .header-table td {
+            vertical-align: top;
+        }
+        .logo {
+            max-width: 200px;
+            max-height: 80px;
+        }
+        .invoice-title {
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #2563EB; /* Primary Color */
+            margin-bottom: 5px;
+            text-align: right;
+        }
+        .invoice-meta {
+            text-align: right;
+            font-size: 13px;
+            color: #666;
+        }
+        .invoice-meta strong {
+            color: #333;
+        }
+        .addresses-table {
+            width: 100%;
+            margin-bottom: 30px;
+            border-collapse: collapse;
+        }
+        .addresses-table td {
+            width: 50%;
+            vertical-align: top;
+        }
+        .address-box h3 {
+            font-size: 14px;
+            text-transform: uppercase;
+            color: #999;
+            margin: 0 0 10px 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+            width: 90%;
+        }
+        .address-content {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        .items-table th {
+            background-color: #F3F4F6;
+            color: #374151;
+            font-weight: bold;
+            text-align: left;
+            padding: 12px 15px;
+            text-transform: uppercase;
+            font-size: 12px;
+            border-bottom: 2px solid #E5E7EB;
+        }
+        .items-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #E5E7EB;
+            color: #4B5563;
+        }
+        .items-table tr:last-child td {
+            border-bottom: none;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .totals-table {
+            width: 40%;
+            margin-left: auto;
+            border-collapse: collapse;
+        }
+        .totals-table td {
+            padding: 8px 0;
+            text-align: right;
+        }
+        .totals-table .label {
+            color: #666;
+            padding-right: 20px;
+        }
+        .totals-table .value {
+            font-weight: bold;
+            color: #333;
+        }
+        .totals-table .grand-total {
+            font-size: 18px;
+            color: #2563EB;
+            border-top: 2px solid #E5E7EB;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #E5E7EB;
+            text-align: center;
+            font-size: 12px;
+            color: #9CA3AF;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-top: 10px;
+        }
+        .status-paid { background-color: #D1FAE5; color: #065F46; }
+        .status-unpaid { background-color: #FEE2E2; color: #991B1B; }
+        .status-refunded { background-color: #F3F4F6; color: #1F2937; }
+        .status-canceled { background-color: #F3F4F6; color: #1F2937; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <table class="header-table">
+            <tr>
+                <td>
+                    {% if company.logo_url %}
+                        <img src="{{ company.logo_url }}" class="logo" alt="{{ company.name }}">
+                    {% else %}
+                        <h1>{{ company.name }}</h1>
+                    {% endif %}
+                </td>
+                <td align="right">
+                    <div class="invoice-title">{{ 'INVOICE'|trans }}</div>
+                    <div class="invoice-meta">
+                        <strong>{{ 'Invoice #'|trans }}:</strong> {{ invoice.series }}{{ "%05s"|format(invoice.nr) }}<br>
+                        <strong>{{ 'Date'|trans }}:</strong> {{ invoice.created_at|format_date }}<br>
+                        <strong>{{ 'Due Date'|trans }}:</strong> {{ invoice.due_at|format_date }}<br>
+                        <div class="status-badge status-{{ invoice.status }}">
+                            {{ invoice.status|trans }}
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Addresses -->
+        <table class="addresses-table">
+            <tr>
+                <td>
+                    <div class="address-box">
+                        <h3>{{ 'From'|trans }}</h3>
+                        <div class="address-content">
+                            <strong>{{ company.name }}</strong><br>
+                            {{ company.address_1 }}<br>
+                            {% if company.address_2 %}{{ company.address_2 }}<br>{% endif %}
+                            {% if company.address_3 %}{{ company.address_3 }}<br>{% endif %}
+                            {{ company.email }}<br>
+                            {{ company.tel }}
+                            {% if company.vat_number %}<br>{{ 'VAT'|trans }}: {{ company.vat_number }}{% endif %}
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="address-box">
+                        <h3>{{ 'To'|trans }}</h3>
+                        <div class="address-content">
+                            <strong>{{ invoice.buyer_first_name }} {{ invoice.buyer_last_name }}</strong><br>
+                            {% if invoice.buyer_company %}{{ invoice.buyer_company }}<br>{% endif %}
+                            {{ invoice.buyer_address }}<br>
+                            {{ invoice.buyer_city }}, {{ invoice.buyer_zip }}<br>
+                            {{ invoice.buyer_country }}<br>
+                            {{ invoice.buyer_email }}
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Items -->
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th width="5%">#</th>
+                    <th width="50%">{{ 'Description'|trans }}</th>
+                    <th width="15%" class="text-center">{{ 'Qty'|trans }}</th>
+                    <th width="15%" class="text-right">{{ 'Price'|trans }}</th>
+                    <th width="15%" class="text-right">{{ 'Total'|trans }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i, item in invoice.lines %}
+                <tr>
+                    <td>{{ i + 1 }}</td>
+                    <td>
+                        <strong>{{ item.title }}</strong>
+                        {% if item.period %}
+                            <br><small class="text-muted">{{ item.period | period_title }}</small>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">{{ item.quantity }}</td>
+                    <td class="text-right">{{ item.price | money(invoice.currency) }}</td>
+                    <td class="text-right">{{ item.total | money(invoice.currency) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Totals -->
+        <table class="totals-table">
+            <tr>
+                <td class="label">{{ 'Subtotal'|trans }}:</td>
+                <td class="value">{{ invoice.subtotal | money(invoice.currency) }}</td>
+            </tr>
+            {% if invoice.tax > 0 %}
+            <tr>
+                <td class="label">{{ invoice.taxname }} {{ invoice.taxrate }}%:</td>
+                <td class="value">{{ invoice.tax | money(invoice.currency) }}</td>
+            </tr>
+            {% endif %}
+            {% if invoice.discount > 0 %}
+            <tr>
+                <td class="label">{{ 'Discount'|trans }}:</td>
+                <td class="value">- {{ invoice.discount | money(invoice.currency) }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td class="label grand-total">{{ 'Total'|trans }}:</td>
+                <td class="value grand-total">{{ invoice.total | money(invoice.currency) }}</td>
+            </tr>
+        </table>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>{{ 'Thank you for your business!'|trans }}</p>
+            {% if company.signature %}
+                <p>{{ company.signature }}</p>
+            {% endif %}
+            {% if company.account_number %}
+                <p>{{ 'Bank Account'|trans }}: {{ company.account_number }} | {{ 'BIC'|trans }}: {{ company.bic }} | {{ 'Bank'|trans }}: {{ company.bank_name }}</p>
+            {% endif %}
+            <p>Generated on {{ now|format_date }}</p>
+        </div>
+    </div>
+</body>
+</html>

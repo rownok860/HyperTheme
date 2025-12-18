@@ -1,8 +1,8 @@
 {
-    "name": "FOSSBilling Tide",
-    "version": "0.9.6",
-    "description": "Tide client area theme",
-    "icon": "tide.png",
-    "author": "Tanglin",
-    "author_url": "https://tanglin.io/"
+    "name": "HyperTheme",
+    "version": "1.0.0",
+    "description": "A fossbilling client area theme forked of tide theme",
+    "icon": "HyperTheme.png",
+    "author": "rownok860",
+    "author_url": "https://github.com/rownok860"
 }
