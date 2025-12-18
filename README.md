@@ -3,7 +3,7 @@
 ## Overview
 
 HyperTheme is a modern, high-performance client area theme for FOSSBilling. It is a fork of the [Tide theme](https://github.com/getpinga/tide) by [@getpinga](https://github.com/getpinga). HyperTheme enhances the core aesthetic with a streamlined navigation, refined dashboard, and full dark mode support.
-
+<img width="735" alt="hyper_screen" src="screenshot.png">
 ## Installation
 
 Follow these steps to install the HyperTheme:
